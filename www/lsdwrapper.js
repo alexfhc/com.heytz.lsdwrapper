@@ -9,7 +9,7 @@ exports.setDeviceWifi = function (wifiSSID,
                                   moduleDefaultUser,
                                   moduleDefaultPass,
                                   success, error) {
-    exec(success, error, "mxsdkwrapper", "setDeviceWifi",
+    exec(success, error, "lsdwrapper", "setDeviceWifi",
         [
             wifiSSID,
             wifiKey,

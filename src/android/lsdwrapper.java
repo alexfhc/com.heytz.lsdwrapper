@@ -4,8 +4,6 @@ import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.util.Log;
-import com.mxchip.easylink.EasyLinkAPI;
-import com.mxchip.easylink.FTCListener;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
@@ -25,12 +23,18 @@ import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import com.lsd.easy.joine.lib.ConfigUdpBroadcast.ConfigRetObj;
+import com.lsd.easy.joine.lib.Setting2Activity;
+import com.lsd.easy.joine.lib.SmartConfig2Activity;
+import com.lsd.easy.joine.lib.WifiAdmin;
+import com.lsd.easy.joine.test.R;
+
 /**
  * This class starts transmit to activation
  */
-public class mxsdkwrapper extends CordovaPlugin {
+public class lsdwrapper extends CordovaPlugin {
 
-    private static String TAG = "=====mxsdkwrapper.class====";
+    private static String TAG = "=====lsdwrapper.class====";
     private CallbackContext easyLinkCallbackContext;
     private Context context;
     //    private FTC_Service ftcService;
@@ -41,10 +45,9 @@ public class mxsdkwrapper extends CordovaPlugin {
     //  private int easylinkVersion;
     private int activateTimeout;
     private String activatePort;
-
+    private SmartConfigActivityDemoBak SmartConfigActivity;
 
     /**
-     * Step 2.1 FTC Call back, process the response from MXChip Model.
      */
 //    private FTC_Listener ftcListener;//new FTCLisenerExtension(easyLinkCallbackContext);
     @Override
@@ -56,6 +59,7 @@ public class mxsdkwrapper extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if (action.equals("setDeviceWifi")) {
+
             String wifiSSID = args.getString(0);
             String wifiKey = args.getString(1);
             userName = args.getString(2);
@@ -75,12 +79,13 @@ public class mxsdkwrapper extends CordovaPlugin {
                 Log.e(TAG, "arguments error ===== empty");
                 return false;
             }
-
+            SmartConfigActivity.doConnect(wifiSSID, wifiKey);
             // todo: replace with EasylinkAPI
             //ftcService = new FTC_Service();
-            easyLinkCallbackContext = callbackContext;
+            SmartConfigActivity.onConfigResult = callbackContext;
+//            easyLinkCallbackContext = callbackContext;
             //ftcListener = new FTCLisenerExtension(callbackContext);
-            this.transmitSettings(wifiSSID, wifiKey);
+//            this.transmitSettings(wifiSSID, wifiKey);
             return true;
         }
         return false;

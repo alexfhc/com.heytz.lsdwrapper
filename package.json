@@ -1,7 +1,7 @@
 {
-  "version": "0.0.5",
-  "name": "com.heytz.mxsdkwrapper",
-  "cordova_name": "mxsdkwrapper",
+  "version": "0.0.1",
+  "name": "com.heytz.lsdwrapper",
+  "cordova_name": "lsdwrapper",
   "platforms": [
     "ios",
     "android"
