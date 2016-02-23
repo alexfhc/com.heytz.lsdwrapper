@@ -35,9 +35,7 @@ import com.lsd.easy.joine.test.R;
 public class lsdwrapper extends CordovaPlugin {
 
     private static String TAG = "=====lsdwrapper.class====";
-    private CallbackContext easyLinkCallbackContext;
     private Context context;
-    //    private FTC_Service ftcService;
     private String userName;
     private String deviceLoginID;
     private String devicePassword;
@@ -45,8 +43,165 @@ public class lsdwrapper extends CordovaPlugin {
     //  private int easylinkVersion;
     private int activateTimeout;
     private String activatePort;
-    private SmartConfigActivityDemoBak SmartConfigActivity;
 
+
+    private Handler mHandler;
+    private static MulticastSocket multicastSocket;
+    private static boolean sendFlag = true;
+    public static int CODE_INTERVAL_TIMES = 8;
+    public static int CODE_TIME = 20;
+
+
+    private Runnable timeoutRun = new Runnable() {
+        public void run() {
+            SmartConfigTool2.stopSend();
+            ConfigRetObj obj = new ConfigRetObj();
+            obj.errcode = -1;
+            SmartConfig2Activity.this.onConfigResult(obj);
+        }
+    };
+
+    protected void onConfigResult(ConfigRetObj var1);
+
+    public static void send(final String ssid, final String password) {
+        if(multicastSocket == null) {
+            try {
+                multicastSocket = new MulticastSocket();
+            } catch (IOException var3) {
+                var3.printStackTrace();
+            }
+        }
+
+        sendFlag = true;
+        (new Thread(new Runnable() {
+            public void run() {
+                while(sendFlag) {
+                    int count = 0;
+
+                    while(count < CODE_INTERVAL_TIMES) {
+                        sendContent(password, 1);
+                        if(ssid != null && ssid.length() > 0) {
+                            sendContent(ssid, 0);
+                        }
+
+                        ++count;
+
+                        try {
+                            Thread.sleep((long)CODE_INTERVAL_TIME);
+                        } catch (InterruptedException var3) {
+                            var3.printStackTrace();
+                        }
+                    }
+                }
+
+            }
+        })).start();
+    }
+
+    public static void sendContent(String content, int type) {
+        byte[] contents = content.getBytes();
+        int len;
+        if(contents.length == 0) {
+            contents = new byte[8];
+
+            for(len = 0; len < 8; ++len) {
+                contents[len] = 1;
+            }
+        }
+
+        len = contents.length;
+
+        for(int i = 0; i < contents.length && sendFlag; ++i) {
+            byte b = contents[i];
+            int index = i;
+            if(type == 0) {
+                index = i & 63;
+            } else if(type == 1) {
+                index = i | 64;
+            }
+
+            int checksum = 255 & CRC8.calcCrc8(new byte[]{(byte)len, (byte)index, b});
+            int[] desTable = getDesTable();
+            int ip1 = len ^ desTable[0];
+            int ip2 = index ^ desTable[1];
+            int ip3 = b ^ desTable[2];
+            int pLen = checksum ^ desTable[3];
+            String ip = "228." + ip1 + "." + ip2 + "." + ip3;
+            Log.i(TAG, "enc:" + ip + ",type:" + type);
+
+            for(int e = 0; e < CODE_TIMES; ++e) {
+                sendPacket(ip, pLen);
+            }
+
+            try {
+                Thread.sleep((long)CODE_TIME);
+            } catch (InterruptedException var15) {
+                var15.printStackTrace();
+            }
+        }
+
+    }
+
+    private static void sendPacket(String ip, int pLen) {
+        if(sendFlag) {
+            try {
+                InetAddress inetAddress = InetAddress.getByName(ip);
+                byte[] e = getBytes(pLen);
+                DatagramPacket datagramPacket = new DatagramPacket(e, pLen, inetAddress, 8888);
+                if(multicastSocket != null) {
+                    multicastSocket.send(datagramPacket);
+                }
+            } catch (UnknownHostException var5) {
+                var5.printStackTrace();
+            } catch (IOException var6) {
+                var6.printStackTrace();
+            }
+        }
+
+    }
+
+    public static void stopSend() {
+        sendFlag = false;
+        multicastSocket = null;
+        Log.i(TAG, "stopSend................" + sendFlag);
+    }
+
+    private static byte[] getBytes(int capacity) {
+        byte[] data = new byte[capacity];
+
+        for(int i = 0; i < capacity; ++i) {
+            data[i] = 65;
+        }
+
+        return data;
+    }
+
+    private static int[] getDesTable() {
+        Random rand = new Random();
+        int index = rand.nextInt(desTables.length);
+        return desTables[index];
+    }
+
+//    protected void initConfig() {
+//        this.init();
+//        this.mConfigBroadUdp = new ConfigUdpBroadcast(this.broadcastIp, new DataListener() {
+//            public void onReceive(ConfigRetObj obj) {
+//                String mac = obj.mac;
+//                if(SmartConfig2Activity.this.CONFIGURING && !SmartConfig2Activity.this.successMacSet.contains(mac)) {
+//                    Message msg = SmartConfig2Activity.this.me.getHandler().obtainMessage();
+//                    msg.what = 4097;
+//                    msg.obj = obj;
+//                    SmartConfig2Activity.this.me.getHandler().sendMessage(msg);
+//                    SmartConfig2Activity.this.me.getHandler().removeCallbacks(SmartConfig2Activity.this.timeoutRun);
+//                    SmartConfig2Activity.this.successMacSet.add(mac);
+//                }
+//
+//            }
+//        });
+//        this.mConfigBroadUdp.open();
+//        this.mConfigBroadUdp.receive();
+//        Log.i(this.TAG, "...initConfig....");
+//    }
     /**
      */
 //    private FTC_Listener ftcListener;//new FTCLisenerExtension(easyLinkCallbackContext);
