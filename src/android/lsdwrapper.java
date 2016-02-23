@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.util.Random;
+import java.net.UnknownHostException;
 
 
 import com.lsd.easy.joine.lib.ConfigUdpBroadcast.ConfigRetObj;
@@ -53,7 +54,7 @@ public class lsdwrapper extends CordovaPlugin {
     private int activateTimeout;
     private String activatePort;
 
-
+    private static int[][] desTables = new int[][]{{15, 12, 8, 2}, {13, 8, 10, 1}, {1, 10, 13, 0}, {3, 15, 0, 6}, {11, 8, 12, 7}, {4, 3, 2, 12}, {6, 11, 13, 8}, {2, 1, 14, 7}};
     private Handler mHandler;
     private static MulticastSocket multicastSocket;
     private static boolean sendFlag = true;
@@ -72,7 +73,7 @@ public class lsdwrapper extends CordovaPlugin {
 //        }
 //    };
 
-    private void onConfigResult(ConfigRetObj var1);
+//    private void onConfigResult(ConfigRetObj var1);
 
     public static void send(final String ssid, final String password) {
         if (multicastSocket == null) {
