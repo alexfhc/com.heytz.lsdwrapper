@@ -108,10 +108,11 @@ public class lsdwrapper extends CordovaPlugin {
                     }
                 }
             }).start();
-        } else {
+        } else if (obj.errcode == -1) {
             lsdCallbackContext.error("-1");
+        } else {
+            lsdCallbackContext.error("error");
         }
-
     }
 
 
@@ -300,7 +301,7 @@ public class lsdwrapper extends CordovaPlugin {
             // todo: replace with EasylinkAPI
             //ftcService = new FTC_Service();
 //            SmartConfigActivity.onConfigResult = callbackContext;
-//            easyLinkCallbackContext = callbackContext;
+            lsdCallbackContext = callbackContext;
             //ftcListener = new FTCLisenerExtension(callbackContext);
 //            this.transmitSettings(wifiSSID, wifiKey);
             return true;
