@@ -44,7 +44,7 @@
         <config-file parent="/*" target="AndroidManifest.xml"/>
         <source-file src="src/android/lsdwrapper.java" target-dir="src/com/heytz/lsdwrapper"/>
         <source-file src="libs/dd-plist.jar" target-dir="libs"/>
-        <source-file src="llsd-easy-joine.jar" target-dir="libs"/>
+        <source-file src="lsd-easy-joine.jar" target-dir="libs"/>
         <source-file src="libs/jetty-8.1.15.jar" target-dir="libs"/>
     </platform>
 </plugin>
