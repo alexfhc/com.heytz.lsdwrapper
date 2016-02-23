@@ -23,10 +23,19 @@ import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import android.os.Handler;
+import java.net.MulticastSocket;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.util.Random;
+
+
 import com.lsd.easy.joine.lib.ConfigUdpBroadcast.ConfigRetObj;
 import com.lsd.easy.joine.lib.Setting2Activity;
 import com.lsd.easy.joine.lib.SmartConfig2Activity;
 import com.lsd.easy.joine.lib.WifiAdmin;
+import com.lsd.easy.joine.lib.CRC8;
 //import com.lsd.easy.joine.test.R;
 
 /**
@@ -51,6 +60,7 @@ public class lsdwrapper extends CordovaPlugin {
     public static int CODE_INTERVAL_TIMES = 8;
     public static int CODE_INTERVAL_TIME = 500;
     public static int CODE_TIME = 20;
+    public static int CODE_TIMES = 5;
 
 
 //    private Runnable timeoutRun = new Runnable() {
@@ -62,7 +72,7 @@ public class lsdwrapper extends CordovaPlugin {
 //        }
 //    };
 
-    protected void onConfigResult(ConfigRetObj var1);
+    private void onConfigResult(ConfigRetObj var1);
 
     public static void send(final String ssid, final String password) {
         if (multicastSocket == null) {
