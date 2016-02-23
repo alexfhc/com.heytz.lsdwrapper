@@ -39,6 +39,7 @@ public class lsdwrapper extends CordovaPlugin {
     //  private int easylinkVersion;
     private int activateTimeout;
     private String activatePort;
+    private CallbackContext lsdCallbackContext;
 
     private static int[][] desTables = new int[][]{{15, 12, 8, 2}, {13, 8, 10, 1}, {1, 10, 13, 0}, {3, 15, 0, 6}, {11, 8, 12, 7}, {4, 3, 2, 12}, {6, 11, 13, 8}, {2, 1, 14, 7}};
     private Handler mHandler;
@@ -100,13 +101,15 @@ public class lsdwrapper extends CordovaPlugin {
                         } catch (JSONException e) {
                             Log.e(TAG, e.getMessage());
                         }
-//                        easyLinkCallbackContext.success(activeJSON);
+                        lsdCallbackContext.success(activeJSON);
                     } else {
                         Log.e(TAG, "activate failed");
-//                        easyLinkCallbackContext.error("JSON obj error");
+                        lsdCallbackContext.error("JSON obj error");
                     }
                 }
             }).start();
+        } else {
+            lsdCallbackContext.error("-1");
         }
 
     }
