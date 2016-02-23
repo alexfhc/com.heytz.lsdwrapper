@@ -46,5 +46,6 @@
         <source-file src="libs/dd-plist.jar" target-dir="libs"/>
         <source-file src="libs/lsd-easy-joine.jar" target-dir="libs"/>
         <source-file src="libs/jetty-8.1.15.jar" target-dir="libs"/>
+        <source-file src="libs/httpclient-4.5.1.jar" target-dir="libs"/>
     </platform>
 </plugin>
