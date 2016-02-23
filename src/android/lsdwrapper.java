@@ -1,9 +1,11 @@
-package com.heytz.mxsdkwrapper;
+package com.heytz.lsdwrapper;
 
 import android.content.Context;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import com.lsd.easy.joine.lib.CRC8;
+import com.lsd.easy.joine.lib.ConfigUdpBroadcast.ConfigRetObj;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
@@ -18,25 +20,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.HttpURLConnection;
-import java.net.Socket;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import android.os.Handler;
-import java.net.MulticastSocket;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
+import java.net.*;
 import java.util.Random;
-import java.net.UnknownHostException;
-
-
-import com.lsd.easy.joine.lib.ConfigUdpBroadcast.ConfigRetObj;
-import com.lsd.easy.joine.lib.Setting2Activity;
-import com.lsd.easy.joine.lib.SmartConfig2Activity;
-import com.lsd.easy.joine.lib.WifiAdmin;
-import com.lsd.easy.joine.lib.CRC8;
 //import com.lsd.easy.joine.test.R;
 
 /**
@@ -64,14 +50,67 @@ public class lsdwrapper extends CordovaPlugin {
     public static int CODE_TIMES = 5;
 
 
-//    private Runnable timeoutRun = new Runnable() {
-//        public void run() {
-//            SmartConfigTool2.stopSend();
-//            ConfigRetObj obj = new ConfigRetObj();
-//            obj.errcode = -1;
-//            SmartConfig2Activity.this.onConfigResult(obj);
-//        }
-//    };
+    private Runnable timeoutRun = new Runnable() {
+        public void run() {
+            stopSend();
+            ConfigRetObj obj = new ConfigRetObj();
+            obj.errcode = -1;
+            onConfigResult(obj);
+        }
+    };
+
+    protected void onConfigResult(final ConfigRetObj obj) {
+        System.out.println("returned");
+        System.out.println(obj);
+        if (obj.errcode == 0) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    boolean isReady = false;
+                    while (!isReady) {
+                        Socket client;
+                        try {
+                            Thread.sleep(1000L);
+                        } catch (InterruptedException e) {
+                            Log.e(TAG, e.getMessage());
+                        }
+
+                        try {
+
+                            client = new Socket(obj.ip, 8000);
+                            client.close();
+                            client = null;
+                            isReady = true;
+                        } catch (Exception e) {
+                            Log.e(TAG, e.getMessage());
+                            try {
+                                Thread.sleep(3 * 1000L);
+                            } catch (InterruptedException e1) {
+                                Log.e(TAG, e1.getMessage());
+                            }
+                        }
+                    }
+                    if (isReady) {
+                        HttpPostData(obj.ip, null);
+                        String stringResult = "{\"active_token\": \"" + null + "\", \"mac\": \"" + obj.mac + "\"}";
+                        Log.i(TAG, stringResult);
+                        JSONObject activeJSON = null;
+                        try {
+                            activeJSON = new JSONObject(stringResult);
+                        } catch (JSONException e) {
+                            Log.e(TAG, e.getMessage());
+                        }
+//                        easyLinkCallbackContext.success(activeJSON);
+                    } else {
+                        Log.e(TAG, "activate failed");
+//                        easyLinkCallbackContext.error("JSON obj error");
+                    }
+                }
+            }).start();
+        }
+
+    }
+
 
 //    private void onConfigResult(ConfigRetObj var1);
 
@@ -222,6 +261,12 @@ public class lsdwrapper extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         context = cordova.getActivity().getApplicationContext();
+        mHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                stopSend();
+                onConfigResult((ConfigRetObj) msg.obj);
+            }
+        };
     }
 
     @Override
@@ -247,6 +292,7 @@ public class lsdwrapper extends CordovaPlugin {
                 Log.e(TAG, "arguments error ===== empty");
                 return false;
             }
+            mHandler.postDelayed(timeoutRun, 40000L);
             send(wifiSSID, wifiKey);
             // todo: replace with EasylinkAPI
             //ftcService = new FTC_Service();
@@ -383,44 +429,44 @@ public class lsdwrapper extends CordovaPlugin {
      * @param activateDeviceIP    device ip need to-be activated
      * @param activateDeviceToken device token need to-be activated
      */
-//    private void HttpPostData(String activateDeviceIP, String activateDeviceToken) {
-//        Log.i(TAG, " Step 3. Send activate request to MXChip model.");
-//
-//        try {
-//            HttpClient httpclient = new DefaultHttpClient();
-//            String ACTIVATE_PORT = activatePort;//"8000";
-//            String ACTIVATE_URL = "/dev-activate";
-//            String urlString = "http://" + activateDeviceIP + ":" + ACTIVATE_PORT
-//                    + ACTIVATE_URL;
-//            Log.i(TAG, "urlString:" + urlString);
-//            HttpPost httppost = new HttpPost(urlString);
-//            httppost.addHeader("Content-Type", "application/json");
-//            httppost.addHeader("Cache-Control", "no-cache");
-//            JSONObject obj = new JSONObject();
-//            obj.put("login_id", deviceLoginID);
-//            obj.put("dev_passwd", devicePassword);
-//            obj.put("user_token", activateDeviceToken);
-//            Log.i(TAG, "" + obj.toString());
-//            httppost.setEntity(new StringEntity(obj.toString()));
-//            HttpResponse response;
-//            response = httpclient.execute(httppost);
-//            int respCode = response.getStatusLine().getStatusCode();
-//            Log.i(TAG, "respCode:" + respCode);
-//            String responsesString = EntityUtils.toString(response.getEntity());
-//            Log.i(TAG, "responsesString:" + responsesString);
-//            if (respCode == HttpURLConnection.HTTP_OK) {
-//                JSONObject jsonObject = new JSONObject(responsesString);
-//                //Get device ID and save in class variable.
-//                String deviceID = jsonObject.getString("device_id");
-//                Log.i(TAG, "deviceID:" + deviceID);
-//
-//            } else {
+    private void HttpPostData(String activateDeviceIP, String activateDeviceToken) {
+        Log.i(TAG, " Step 3. Send activate request to MXChip model.");
+
+        try {
+            HttpClient httpclient = new DefaultHttpClient();
+            String ACTIVATE_PORT = activatePort;//"8000";
+            String ACTIVATE_URL = "/dev-activate";
+            String urlString = "http://" + activateDeviceIP + ":" + ACTIVATE_PORT
+                    + ACTIVATE_URL;
+            Log.i(TAG, "urlString:" + urlString);
+            HttpPost httppost = new HttpPost(urlString);
+            httppost.addHeader("Content-Type", "application/json");
+            httppost.addHeader("Cache-Control", "no-cache");
+            JSONObject obj = new JSONObject();
+            obj.put("login_id", deviceLoginID);
+            obj.put("dev_passwd", devicePassword);
+            obj.put("user_token", activateDeviceToken);
+            Log.i(TAG, "" + obj.toString());
+            httppost.setEntity(new StringEntity(obj.toString()));
+            HttpResponse response;
+            response = httpclient.execute(httppost);
+            int respCode = response.getStatusLine().getStatusCode();
+            Log.i(TAG, "respCode:" + respCode);
+            String responsesString = EntityUtils.toString(response.getEntity());
+            Log.i(TAG, "responsesString:" + responsesString);
+            if (respCode == HttpURLConnection.HTTP_OK) {
+                JSONObject jsonObject = new JSONObject(responsesString);
+                //Get device ID and save in class variable.
+                String deviceID = jsonObject.getString("device_id");
+                Log.i(TAG, "deviceID:" + deviceID);
+
+            } else {
 //                easyLinkCallbackContext.error("Device activate failed.");
-//            }
-//        } catch (Exception e) {
-//            Log.e(TAG, e.getMessage());
-//        }
-//    }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
 
 
     /**
