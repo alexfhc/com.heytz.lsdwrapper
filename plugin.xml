@@ -6,35 +6,21 @@
     <js-module name="lsdwrapper" src="www/lsdwrapper.js">
         <clobbers target="cordova.plugins.lsdwrapper"/>
     </js-module>
-    <!--<platform name="ios">-->
-        <!--<config-file parent="/*" target="config.xml">-->
-            <!--<feature name="lsdwrapper">-->
-                <!--<param name="ios-package" value="lsdwrapper"/>-->
-            <!--</feature>-->
-        <!--</config-file>-->
-        <!--<framework src="SystemConfiguration.framework"/>-->
-        <!--<framework src="CFNetwork.framework"/>-->
+    <platform name="ios">
+        <config-file parent="/*" target="config.xml">
+            <feature name="lsdwrapper">
+                <param name="ios-package" value="lsdwrapper"/>
+            </feature>
+        </config-file>
+        <framework src="SystemConfiguration.framework"/>
+        <framework src="CFNetwork.framework"/>
 
-        <!--<source-file src="src/ios/NSString+MD5.h"/>-->
-        <!--<source-file src="src/ios/NSString+MD5.m"/>-->
-        <!--<source-file src="src/ios/mxsdkwrapper.m"/>-->
+        <source-file src="src/ios/HiJoine.h"/>
+        <source-file src="src/ios/lsdwrapper.m"/>
+        <source-file framework="true" src="src/ios/libHIQJOine.a"/>
+        <framework src="libHIQJOine.a"/>
 
-        <!--&lt;!&ndash;CocoaAsyncSocket v7.3.3&ndash;&gt;-->
-        <!--<source-file src="src/ios/asyncsocket/AsyncSocket.h"/>-->
-        <!--<source-file src="src/ios/asyncsocket/AsyncSocket.m"/>-->
-        <!--<source-file src="src/ios/asyncsocket/AsyncUdpSocket.h"/>-->
-        <!--<source-file src="src/ios/asyncsocket/AsyncUdpSocket.m"/>-->
-
-        <!--&lt;!&ndash;Reachability&ndash;&gt;-->
-        <!--<source-file src="src/ios/EasyLink/Reachability/Reachability.h"/>-->
-        <!--<source-file src="src/ios/EasyLink/Reachability/Reachability.m"/>-->
-
-        <!--&lt;!&ndash;Easylink lib&ndash;&gt;-->
-        <!--<source-file src="src/ios/EasyLink/Common/EASYLINK.h"/>-->
-        <!--<source-file src="src/ios/EasyLink/Common/route.h"/>-->
-        <!--<source-file framework="true" src="src/ios/EasyLink/Common/libEasyLink.a"/>-->
-
-    <!--</platform>-->
+    </platform>
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="lsdwrapper">

@@ -1,13 +1,9 @@
-/********* mxsdkwrapper.m Cordova Plugin Implementation *******/
-#import <Foundation/Foundation.h>
-#import <Cordova/CDV.h>
-#import "EASYLINK.h"
-#import "NSString+MD5.h"
-#import "AFNetworking.h"
+#import "HiJoine.h"
 
-@interface mxsdkwrapper : CDVPlugin <EasyLinkFTCDelegate> {
+@interface lsdwrapper : CDVPlugin <HiJoineDelegate> {
     // Member variables go here.
-    EASYLINK *easylink_config;
+    @property (nonatomic, strong)HiJoine * joine;
+    //EASYLINK *easylink_config;
     NSMutableDictionary *deviceIPConfig;
     NSString *loginID;
     CDVInvokedUrlCommand * commandHolder;
@@ -23,17 +19,15 @@
 - (void)setDeviceWifi:(CDVInvokedUrlCommand*)command;
 @end
 
-@implementation mxsdkwrapper
+@implementation lsdwrapper
 
 -(void)pluginInitialize{
-    easylink_config = nil;
+
 }
 
 - (void)setDeviceWifi:(CDVInvokedUrlCommand*)command
 {
-    if (easylink_config == nil || easylink_config.delegate == nil) {
-        easylink_config = [[EASYLINK alloc]initWithDelegate:self];
-    }
+
     NSString* wifiSSID = [command.arguments objectAtIndex:0];
     NSString* wifiKey = [command.arguments objectAtIndex:1];
     loginID = [command.arguments objectAtIndex:2];
@@ -59,21 +53,17 @@
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
     }
-    
-    NSMutableDictionary *wlanConfig = [NSMutableDictionary dictionaryWithCapacity:20];
-    [wlanConfig setObject:[wifiSSID dataUsingEncoding:NSUTF8StringEncoding] forKey:KEY_SSID];
-    [wlanConfig setObject:wifiKey forKey:KEY_PASSWORD];
-    //this should be always YES as currently only support DHCP mode
-    [wlanConfig setObject:[NSNumber numberWithBool:@YES] forKey:KEY_DHCP];
-    //use default value
-    EasyLinkMode mode = (EasyLinkMode)easylinkVersion;
-    if (!mode) {
-        mode = EASYLINK_V2_PLUS;
-    }
-    [easylink_config prepareEasyLink_withFTC:wlanConfig info:nil mode:mode];
-    [easylink_config transmitSettings];
-    commandHolder = command;
-    
+    HiJoine *joine = [[HiJoine alloc] init];
+        [joine setBoardDataWithPassword:wifiKey withBackBlock:^(NSInteger result, NSString *message) {
+            if (result == 1) {
+               // NSString *successStr = [NSString stringWithFormat:@"MAC地址 %@ 连接成功，耗时 %ld 秒", message];
+               // [SVProgressHUD showSuccessWithStatus:successStr];
+            }else{
+               // NSString *failStr = [NSString stringWithFormat:@"%@,耗时%ld 秒", message];
+               // [SVProgressHUD showErrorWithStatus:failStr];
+            }
+        }];
+
 }
 
 - (void) onDisconnectFromFTC:(NSNumber *)client

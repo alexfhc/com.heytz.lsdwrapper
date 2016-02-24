@@ -64,6 +64,7 @@ public class lsdwrapper extends CordovaPlugin {
         System.out.println("returned");
         System.out.println(obj);
         if (obj.errcode == 0) {
+            stopSend();
             new Thread(new Runnable() {
                 @Override
                 public void run() {
