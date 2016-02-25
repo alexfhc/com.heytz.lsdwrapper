@@ -37,6 +37,7 @@
     devicePass = [command.arguments objectAtIndex:7];
     int easylinkVersion;
     activatePort = [command.arguments objectAtIndex:5];
+    commandHolder = command;
 
     if ([command.arguments objectAtIndex:3] == nil || [command.arguments objectAtIndex:4] == nil) {
         NSLog(@"Error: arguments easylink_version & timeout");
