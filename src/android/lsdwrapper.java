@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import com.lsd.easy.joine.lib.CRC8;
+import com.lsd.easy.joine.lib.ConfigUdpBroadcast;
 import com.lsd.easy.joine.lib.ConfigUdpBroadcast.ConfigRetObj;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
@@ -22,7 +23,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 //import com.lsd.easy.joine.test.R;
 
 /**
@@ -49,6 +52,9 @@ public class lsdwrapper extends CordovaPlugin {
     public static int CODE_INTERVAL_TIME = 500;
     public static int CODE_TIME = 20;
     public static int CODE_TIMES = 5;
+    private ConfigUdpBroadcast mConfigBroadUdp;
+    private String broadcastIp = "255.255.255.255";
+    private Set<String> successMacSet = new HashSet();
 
 
     private Runnable timeoutRun = new Runnable() {
@@ -238,26 +244,23 @@ public class lsdwrapper extends CordovaPlugin {
         return desTables[index];
     }
 
-//    protected void initConfig() {
-//        this.init();
-//        this.mConfigBroadUdp = new ConfigUdpBroadcast(this.broadcastIp, new DataListener() {
-//            public void onReceive(ConfigRetObj obj) {
-//                String mac = obj.mac;
-//                if(SmartConfig2Activity.this.CONFIGURING && !SmartConfig2Activity.this.successMacSet.contains(mac)) {
-//                    Message msg = SmartConfig2Activity.this.me.getHandler().obtainMessage();
-//                    msg.what = 4097;
-//                    msg.obj = obj;
-//                    SmartConfig2Activity.this.me.getHandler().sendMessage(msg);
-//                    SmartConfig2Activity.this.me.getHandler().removeCallbacks(SmartConfig2Activity.this.timeoutRun);
-//                    SmartConfig2Activity.this.successMacSet.add(mac);
-//                }
-//
-//            }
-//        });
-//        this.mConfigBroadUdp.open();
-//        this.mConfigBroadUdp.receive();
-//        Log.i(this.TAG, "...initConfig....");
-//    }
+    protected void initConfig() {
+        mConfigBroadUdp = new ConfigUdpBroadcast(broadcastIp, new ConfigUdpBroadcast.DataListener() {
+            public void onReceive(ConfigRetObj obj) {
+                String mac = obj.mac;
+                Message msg = mHandler.obtainMessage();
+                msg.what = 4097;
+                msg.obj = obj;
+                mHandler.sendMessage(msg);
+                mHandler.removeCallbacks(timeoutRun);
+                successMacSet.add(mac);
+
+            }
+        });
+        this.mConfigBroadUdp.open();
+        this.mConfigBroadUdp.receive();
+        Log.i(this.TAG, "...initConfig....");
+    }
 
     /**
      */
