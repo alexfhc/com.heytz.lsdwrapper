@@ -269,6 +269,7 @@ public class lsdwrapper extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         context = cordova.getActivity().getApplicationContext();
+        initConfig();
         mHandler = new Handler() {
             public void handleMessage(Message msg) {
                 stopSend();
