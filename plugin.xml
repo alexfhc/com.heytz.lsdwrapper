@@ -18,7 +18,7 @@
         <source-file src="src/ios/HiJoine.h"/>
         <source-file src="src/ios/lsdwrapper.m"/>
         <source-file framework="true" src="src/ios/libHIQJOine.a"/>
-        <framework src="libHIQJOine.a"/>
+        <framework src="src/ios/libHIQJOine.a"/>
 
     </platform>
     <platform name="android">
