@@ -1,8 +1,10 @@
+#import <Foundation/Foundation.h>
+#import <Cordova/CDV.h>
 #import "HiJoine.h"
 
 @interface lsdwrapper : CDVPlugin <HiJoineDelegate> {
     // Member variables go here.
-    @property (nonatomic, strong)HiJoine * joine;
+    HiJoine * joine;
     //EASYLINK *easylink_config;
     NSMutableDictionary *deviceIPConfig;
     NSString *loginID;
@@ -35,7 +37,7 @@
     devicePass = [command.arguments objectAtIndex:7];
     int easylinkVersion;
     activatePort = [command.arguments objectAtIndex:5];
-    
+
     if ([command.arguments objectAtIndex:3] == nil || [command.arguments objectAtIndex:4] == nil) {
         NSLog(@"Error: arguments easylink_version & timeout");
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
@@ -45,7 +47,7 @@
         easylinkVersion = [[command.arguments objectAtIndex:3] intValue];
         acitvateTimeout = [[command.arguments objectAtIndex:4] intValue];
     }
-    
+
     if (wifiSSID == nil || wifiSSID.length == 0 || wifiKey == nil || wifiKey.length == 0 || loginID == nil || loginID.length == 0 || activatePort==nil || activatePort.length == 0 || deviceLoginId == nil || deviceLoginId.length == 0
         || devicePass == nil || devicePass.length==0) {
         NSLog(@"Error: arguments");
@@ -56,133 +58,27 @@
     HiJoine *joine = [[HiJoine alloc] init];
         [joine setBoardDataWithPassword:wifiKey withBackBlock:^(NSInteger result, NSString *message) {
             if (result == 1) {
-               // NSString *successStr = [NSString stringWithFormat:@"MAC地址 %@ 连接成功，耗时 %ld 秒", message];
-               // [SVProgressHUD showSuccessWithStatus:successStr];
+                @try{
+                    NSDictionary *ret = [NSDictionary dictionaryWithObjectsAndKeys:
+                                         message, @"mac",
+                                         nil];
+                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:ret];
+                    [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
+                }
+                @catch (NSException *e){
+                    NSLog(@"error - save configuration..." );
+                    CDVPluginResult *pluginResult = nil;
+                    pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+                    [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
+                }
+                // NSString *successStr = [NSString stringWithFormat:@"MAC地址 %@ 连接成功，耗时 %ld 秒", message];
             }else{
-               // NSString *failStr = [NSString stringWithFormat:@"%@,耗时%ld 秒", message];
-               // [SVProgressHUD showErrorWithStatus:failStr];
+                CDVPluginResult *pluginResult = nil;
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
             }
         }];
 
-}
-
-- (void) onDisconnectFromFTC:(NSNumber *)client
-{
-    @try {
-        if (deviceIp!=nil) {
-            if (deviceIp!=nil && userToken!=nil) {
-                NSString * activateUrl = @"dev-activate";
-                NSString * requestUrl =[[NSString alloc] init];
-                requestUrl = [[[[[[requestUrl stringByAppendingString:@"http://"] stringByAppendingString:deviceIp]
-                                 stringByAppendingString:@":"]
-                                stringByAppendingString:activatePort]
-                               stringByAppendingString:@"/"]
-                              stringByAppendingString:activateUrl];
-                NSLog(@"request url: %@", requestUrl);
-                NSLog(@"user token: %@", userToken);
-                NSLog(@"device user: %@", deviceLoginId);
-                NSLog(@"device pass: %@", devicePass);
-                
-                NSDictionary *parameters = @{@"login_id":deviceLoginId,@"dev_passwd":devicePass,@"user_token":userToken};
-                
-                sleep(acitvateTimeout);
-                
-                AFHTTPRequestOperationManager *manager = [AFHTTPRequestOperationManager manager];
-                
-                NSURLRequest *request = [[AFJSONRequestSerializer serializer] requestWithMethod:@"POST" URLString:requestUrl parameters:parameters error:nil];
-                AFHTTPRequestOperation *op = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-                op.responseSerializer = [AFJSONResponseSerializer serializer];
-                
-                [op setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
-                    NSLog(@"JSON: %@", responseObject);
-                    NSDictionary *ret = [NSDictionary dictionaryWithObjectsAndKeys:
-                                         userToken,@"active_token",
-                                         bssid, @"mac",
-                                         nil];
-                    
-                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:ret];
-                    [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
-                    
-                } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-                    NSLog(@"Error: %@", error);
-                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-                    [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
-                    
-                }];
-                
-                [manager.operationQueue addOperation:op];
-                
-                NSOperationQueue *operationQueue = manager.operationQueue;
-                manager.reachabilityManager = [AFNetworkReachabilityManager managerForDomain:requestUrl];
-                [manager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
-                    switch (status) {
-                        case AFNetworkReachabilityStatusReachableViaWWAN:
-                            [operationQueue setSuspended:YES];
-                            break;
-                        case AFNetworkReachabilityStatusReachableViaWiFi:
-                            [operationQueue setSuspended:NO];
-                            break;
-                        case AFNetworkReachabilityStatusNotReachable:
-                            [operationQueue setSuspended:YES];
-                            break;
-                        default:
-                            [operationQueue setSuspended:YES];
-                            break;
-                    }
-                }];
-                [manager.reachabilityManager startMonitoring];
-            }
-        } else {
-            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
-        }
-    }
-    @catch (NSException *exception) {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
-    }
-    @finally {
-        //
-    }
-    
-    
-}
-
-
-- (void)onFoundByFTC:(NSNumber *)ftcClientTag withConfiguration: (NSDictionary *)configDict;
-{
-    @try{
-        [easylink_config configFTCClient:ftcClientTag withConfiguration:configDict];
-        NSString *deviceName = [configDict objectForKey:@"N"];
-       
-        NSLog(@"device name: %@", deviceName);
-        
-        NSString * bssidPrefix = @"C89346";
-        NSString * deviceNameSplit = [deviceName componentsSeparatedByString:@"("][1];
-        bssid = [bssidPrefix stringByAppendingString:[deviceNameSplit componentsSeparatedByString:@")"][0]];
-        NSLog(@"bssid:%@", bssid);
-        deviceIp = [[[configDict objectForKey:@"C"][1] objectForKey:@"C"][3] objectForKey:@"C"];
-        NSLog(@"device ip: %@", deviceIp);
-        userToken = [[[bssid stringByAppendingString:loginID] stringByAppendingString:devicePass] markMD5];
-    }
-    @catch (NSException *e){
-        NSLog(@"error - save configuration..." );
-        CDVPluginResult *pluginResult = nil;
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
-    }
-    @finally{
-        if (easylink_config !=nil) {
-            [easylink_config stopTransmitting];
-        }
-    }
-}
-
-- (void)dealloc
-{
-    NSLog(@"//====dealloc...====");
-    easylink_config.delegate = nil;
-    easylink_config = nil;
 }
 
 @end
