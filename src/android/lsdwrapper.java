@@ -313,6 +313,10 @@ public class lsdwrapper extends CordovaPlugin {
 //            this.transmitSettings(wifiSSID, wifiKey);
             return true;
         }
+        if (action.equals("dealloc")) {
+            stopSend();
+            return true;
+        }
         return false;
     }
 
