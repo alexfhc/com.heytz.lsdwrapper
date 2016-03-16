@@ -69,52 +69,54 @@ public class lsdwrapper extends CordovaPlugin {
     protected void onConfigResult(final ConfigRetObj obj) {
         System.out.println("returned");
         System.out.println(obj);
+        stopSend();
         if (obj.errcode == 0) {
-            stopSend();
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    boolean isReady = false;
-                    while (!isReady) {
-                        Socket client;
-                        try {
-                            Thread.sleep(1000L);
-                        } catch (InterruptedException e) {
-                            Log.e(TAG, e.getMessage());
-                        }
+            lsdCallbackContext.success(obj.mac);
 
-                        try {
-
-                            client = new Socket(obj.ip, 8000);
-                            client.close();
-                            client = null;
-                            isReady = true;
-                        } catch (Exception e) {
-                            Log.e(TAG, e.getMessage());
-                            try {
-                                Thread.sleep(3 * 1000L);
-                            } catch (InterruptedException e1) {
-                                Log.e(TAG, e1.getMessage());
-                            }
-                        }
-                    }
-                    if (isReady) {
-                        HttpPostData(obj.ip, null);
-                        String stringResult = "{\"active_token\": \"" + null + "\", \"mac\": \"" + obj.mac + "\"}";
-                        Log.i(TAG, stringResult);
-                        JSONObject activeJSON = null;
-                        try {
-                            activeJSON = new JSONObject(stringResult);
-                        } catch (JSONException e) {
-                            Log.e(TAG, e.getMessage());
-                        }
-                        lsdCallbackContext.success(activeJSON);
-                    } else {
-                        Log.e(TAG, "activate failed");
-                        lsdCallbackContext.error("JSON obj error");
-                    }
-                }
-            }).start();
+//            new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    boolean isReady = false;
+//                    while (!isReady) {
+//                        Socket client;
+//                        try {
+//                            Thread.sleep(1000L);
+//                        } catch (InterruptedException e) {
+//                            Log.e(TAG, e.getMessage());
+//                        }
+//
+//                        try {
+//
+//                            client = new Socket(obj.ip, 8000);
+//                            client.close();
+//                            client = null;
+//                            isReady = true;
+//                        } catch (Exception e) {
+//                            Log.e(TAG, e.getMessage());
+//                            try {
+//                                Thread.sleep(3 * 1000L);
+//                            } catch (InterruptedException e1) {
+//                                Log.e(TAG, e1.getMessage());
+//                            }
+//                        }
+//                    }
+//                    if (isReady) {
+//                        HttpPostData(obj.ip, null);
+//                        String stringResult = "{\"active_token\": \"" + null + "\", \"mac\": \"" + obj.mac + "\"}";
+//                        Log.i(TAG, stringResult);
+//                        JSONObject activeJSON = null;
+//                        try {
+//                            activeJSON = new JSONObject(stringResult);
+//                        } catch (JSONException e) {
+//                            Log.e(TAG, e.getMessage());
+//                        }
+//                        lsdCallbackContext.success(activeJSON);
+//                    } else {
+//                        Log.e(TAG, "activate failed");
+//                        lsdCallbackContext.error("JSON obj error");
+//                    }
+//                }
+//            }).start();
         } else if (obj.errcode == -1) {
             lsdCallbackContext.error("-1");
         } else {
