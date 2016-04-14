@@ -21,6 +21,10 @@ exports.setDeviceWifi = function (wifiSSID,
             moduleDefaultPass
         ]);
 };
+exports.sendVerification = function () {
+    exec( null,null,"mxsdkwrapper", "sendVerification",
+        []);
+};
 exports.dealloc = function () {
     exec( null,null,"mxsdkwrapper", "dealloc",
         []);

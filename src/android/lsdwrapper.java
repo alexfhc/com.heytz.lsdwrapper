@@ -4,6 +4,8 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+//import android.net.wifi.WifiInfo;
+//import android.net.wifi.WifiManager;
 import com.lsd.easy.joine.lib.CRC8;
 import com.lsd.easy.joine.lib.ConfigUdpBroadcast;
 import com.lsd.easy.joine.lib.ConfigUdpBroadcast.ConfigRetObj;
@@ -33,6 +35,8 @@ import java.util.Set;
  */
 public class lsdwrapper extends CordovaPlugin {
 
+    private DatagramPacket datagramPacket;
+    private DatagramSocket datagramSocket;
     private static String TAG = "=====lsdwrapper.class====";
     private Context context;
     private String userName;
@@ -71,6 +75,8 @@ public class lsdwrapper extends CordovaPlugin {
         System.out.println(obj);
         stopSend();
         if (obj.errcode == 0) {
+            startUDPServer();
+            broadcastData();
             lsdCallbackContext.success(obj.mac);
 
 //            new Thread(new Runnable() {
@@ -230,6 +236,68 @@ public class lsdwrapper extends CordovaPlugin {
         Log.i(TAG, "stopSend................" + sendFlag);
     }
 
+    private void startUDPServer() {
+        // Run the UDP transmitter initialization on its own thread (just in case, see sendMessage comment)
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                this.initialize(8000);
+            }
+
+            private void initialize(int port) {
+                boolean successResolvingIPAddress = false;
+                // create packet
+                InetAddress address = null;
+                try {
+                    // 'host' can be a ddd.ddd.ddd.ddd or named URL, so doesn't always resolve
+                    address = InetAddress.getLocalHost();
+                    successResolvingIPAddress = true;
+                } catch (UnknownHostException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                // If we were able to resolve the IP address from the host name, we're good to try to initialize
+                if (successResolvingIPAddress) {
+                    byte[] bytes = new byte[0];
+                    datagramPacket = new DatagramPacket(bytes, 0, address, port);
+                    // create socket
+                    try {
+                        datagramSocket = new DatagramSocket();
+
+                    } catch (SocketException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
+    private void broadcastData() {
+        final String message = "{\"appId\":\"testid\"}";
+        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                this.sendMessage(message);
+            }
+
+            private void sendMessage(String data) {
+                boolean messageSent = false;
+                // Only attempt to send a packet if the transmitter initialization was successful
+//                if (successInitializingTransmitter) {
+                byte[] bytes = data.getBytes();
+                datagramPacket.setData(bytes);
+                try {
+                    datagramSocket.send(datagramPacket);
+                    messageSent = true;
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+//                }
+            }
+        });
+    }
+
     private static byte[] getBytes(int capacity) {
         byte[] data = new byte[capacity];
 
@@ -311,6 +379,11 @@ public class lsdwrapper extends CordovaPlugin {
             lsdCallbackContext = callbackContext;
             //ftcListener = new FTCLisenerExtension(callbackContext);
 //            this.transmitSettings(wifiSSID, wifiKey);
+            return true;
+        }
+        if (action.equals("sendVerification")) {
+            startUDPServer();
+            broadcastData();
             return true;
         }
         if (action.equals("dealloc")) {
