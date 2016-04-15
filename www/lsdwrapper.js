@@ -22,10 +22,10 @@ exports.setDeviceWifi = function (wifiSSID,
         ]);
 };
 exports.sendVerification = function () {
-    exec( null,null,"mxsdkwrapper", "sendVerification",
+    exec( null,null,"lsdwrapper", "sendVerification",
         []);
 };
 exports.dealloc = function () {
-    exec( null,null,"mxsdkwrapper", "dealloc",
+    exec( null,null,"lsdwrapper", "dealloc",
         []);
 };
