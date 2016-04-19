@@ -382,8 +382,8 @@ public class lsdwrapper extends CordovaPlugin {
             return true;
         }
         if (action.equals("sendVerification")) {
-            startUDPServer();
-            broadcastData();
+//            startUDPServer();
+//            broadcastData();
             return true;
         }
         if (action.equals("dealloc")) {

@@ -63,7 +63,7 @@
                     NSDictionary *ret = [NSDictionary dictionaryWithObjectsAndKeys:
                                          message, @"mac",
                                          nil];
-                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:ret];
+                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[ret objectForKey:@"mac"]];
                     [self.commandDelegate sendPluginResult:pluginResult callbackId:commandHolder.callbackId];
                 }
                 @catch (NSException *e){
