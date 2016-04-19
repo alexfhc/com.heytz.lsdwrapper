@@ -75,8 +75,8 @@ public class lsdwrapper extends CordovaPlugin {
         System.out.println(obj);
         stopSend();
         if (obj.errcode == 0) {
-            startUDPServer();
-            broadcastData();
+//            startUDPServer();
+//            broadcastData();
             lsdCallbackContext.success(obj.mac);
 
 //            new Thread(new Runnable() {
