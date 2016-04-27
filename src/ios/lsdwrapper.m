@@ -17,12 +17,15 @@
     //
     NSString* deviceLoginId;
     NSString* devicePass;
+//    NSTimer * _timer;
 }
 - (void)setDeviceWifi:(CDVInvokedUrlCommand*)command;
+- (void)dealloc:(CDVInvokedUrlCommand*)command;
 @end
 
-@implementation lsdwrapper
+//static long  _times = 0;
 
+@implementation lsdwrapper
 -(void)pluginInitialize{
 
 }
@@ -38,7 +41,9 @@
     int easylinkVersion;
     activatePort = [command.arguments objectAtIndex:5];
     commandHolder = command;
-
+    if (joine !=nil) {
+        [joine cancelBoardData];
+    }
     if ([command.arguments objectAtIndex:3] == nil || [command.arguments objectAtIndex:4] == nil) {
         NSLog(@"Error: arguments easylink_version & timeout");
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
@@ -56,7 +61,11 @@
         [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
     }
-    HiJoine *joine = [[HiJoine alloc] init];
+//    _times = 0;
+//    _timer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(counteTime) userInfo:nil repeats:YES];
+//    [_timer fire];
+    joine = [[HiJoine alloc] init];
+    joine.delegate = self;
         [joine setBoardDataWithPassword:wifiKey withBackBlock:^(NSInteger result, NSString *message) {
             if (result == 1) {
                 @try{
@@ -81,5 +90,24 @@
         }];
 
 }
+- (void)dealloc:(CDVInvokedUrlCommand*)command
+{
+    NSLog(@"//====dealloc...====");
+    if (joine !=nil) {
+        [joine cancelBoardData];
+    }
+
+}
+
+//- (void)endSending
+//{
+//    [_timer invalidate];
+//    _timer = nil;
+//}
+//
+//- (void)counteTime
+//{
+//    _times ++;
+//}
 
 @end

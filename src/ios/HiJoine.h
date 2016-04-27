@@ -45,7 +45,11 @@
 - (id)fetchSSIDInfo;
 
 
-
+/**
+ *  取消发送数据
+ *
+ */
+- (void)cancelBoardData;
 
 /**
  *  发送数据
