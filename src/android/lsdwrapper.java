@@ -24,6 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.String;
 import java.net.*;
 import java.util.HashSet;
 import java.util.Random;
@@ -236,60 +237,78 @@ public class lsdwrapper extends CordovaPlugin {
         Log.i(TAG, "stopSend................" + sendFlag);
     }
 
-    private void startUDPServer() {
+    private void startUDPServer(int port) {
         // Run the UDP transmitter initialization on its own thread (just in case, see sendMessage comment)
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
-                this.initialize(8000);
+                this.initialize(port);
             }
 
             private void initialize(int port) {
-                boolean successResolvingIPAddress = false;
                 // create packet
-                InetAddress address = null;
                 try {
-                    // 'host' can be a ddd.ddd.ddd.ddd or named URL, so doesn't always resolve
-                    address = InetAddress.getLocalHost();
-                    successResolvingIPAddress = true;
-                } catch (UnknownHostException e) {
+                    byte[] buf = new byte[1024];
+                    DatagramPacket dp = new DatagramPacket(buf, buf.length);
+                    // create socket
+                    datagramSocket = new DatagramSocket(port);
+                    datagramSocket.receive(dp);
+                    clientIP = dp.getAddress().getHostAddress();
+                    String data = new String(dp.getData(), 0, dp.getLength());
+                    data = data + "=ip:" + clientIP;
+                    lsdCallbackContext.success(data);
+                } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
-                }
-                // If we were able to resolve the IP address from the host name, we're good to try to initialize
-                if (successResolvingIPAddress) {
-                    byte[] bytes = new byte[0];
-                    datagramPacket = new DatagramPacket(bytes, 0, address, port);
-                    // create socket
-                    try {
-                        datagramSocket = new DatagramSocket();
-
-                    } catch (SocketException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
                 }
             }
         });
     }
 
-    private void broadcastData() {
+    private void broadcastData(int port, String data) {
         final String message = "{\"appId\":\"testid\"}";
         // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
-                this.sendMessage(message);
+                this.sendMessage(port, message);
             }
 
-            private void sendMessage(String data) {
-                boolean messageSent = false;
-                // Only attempt to send a packet if the transmitter initialization was successful
-//                if (successInitializingTransmitter) {
-                byte[] bytes = data.getBytes();
-                datagramPacket.setData(bytes);
+            private void sendMessage(int port, String data) {
+                DatagramSocket dgSocket = new DatagramSocket();
                 try {
+                    byte[] bytes = data.getBytes();
+                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("255.255.255.255"), port);
+                    for (int i = 0; i < 5; i++) {
+                        datagramSocket.send(datagramPacket);
+                        Thread.sleep(3000);
+                    }
+                    dgSocket.close();
+                    lsdCallbackContext.success("done");
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+//                }
+            }
+        });
+    }
+
+    private void sendUDPData(String ip, int port, String data) {
+        final String message = "{\"appId\":\"testid\"}";
+        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                this.sendMessage(ip, port, message);
+            }
+
+            private void sendMessage(int port, String data) {
+                DatagramSocket dgSocket = new DatagramSocket();
+                try {
+                    byte[] bytes = data.getBytes();
+                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("ip"), port);
                     datagramSocket.send(datagramPacket);
-                    messageSent = true;
-                } catch (IOException e) {
+                    dgSocket.close();
+                    lsdCallbackContext.success("done");
+                } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
@@ -390,170 +409,23 @@ public class lsdwrapper extends CordovaPlugin {
             stopSend();
             return true;
         }
-        return false;
-    }
-
-    /**
-     * Step1. Call FTC Service to start transmit settings.
-     *
-     * @param wifiSSID @desc wifi ssid
-     * @param wifiKey  @desc corresponding wifi key
-     */
-//    private void transmitSettings(String wifiSSID, String wifiKey) {
-//        Log.i(TAG, " Step1. Call FTC Service to transmit settings. SSID = " + wifiSSID + ", Password = " + wifiKey);
-//        int mobileIp = getMobileIP();
-//        Log.i(TAG, String.valueOf(mobileIp));
-//        if (wifiSSID != null && wifiSSID.length() > 0 && wifiKey != null && wifiKey.length() > 0 && mobileIp != 0) {
-//            final EasyLinkAPI elapi = new EasyLinkAPI(context);
-//            elapi.startFTC(wifiSSID, wifiKey, new FTCListener() {
-//                @Override
-//                public void onFTCfinished(String ip,
-//                                          String data) {
-//                    elapi.stopEasyLink();
-//
-//                    if (!"".equals(data)) {
-//                        JSONObject jsonObj;
-//                        try {
-//                            jsonObj = new JSONObject(data);
-//
-//                            String deviceName = jsonObj.getString("N");
-//                            final String deviceIP = jsonObj.getJSONArray("C")
-//                                    .getJSONObject(1).getJSONArray("C")
-//                                    .getJSONObject(3).getString("C");
-//                            Log.i(TAG, "findedDeviceIP:" + deviceIP);
-//                            final String deviceMac = "C89346"
-//                                    + deviceName.substring(
-//                                    deviceName.indexOf("(") + 1,
-//                                    deviceName.length() - 1);
-//
-//                            //Call Step 2.2
-//                            //setDevicePwd(socket, deviceLoginID);
-//                            final String activeToken = markMd5(deviceMac + userName + devicePassword);
-//                            //Call Step 3,4,5.
-//                            Log.d(TAG, String.valueOf(activateTimeout));
-//
-//                            // we need to check the module port has started yet,
-//                            // may cause the problem that it is always running
-//                            // to fix it, introduce a timeoutValue to 240 seconds
-//                            new Thread(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    boolean isReady = false;
-//                                    int timeoutValue = activateTimeout;
-//                                    while (!isReady || !(timeoutValue == 0)) {
-//                                        Socket client;
-//                                        try {
-//                                            Thread.sleep(1000L);
-//                                            timeoutValue--;
-//                                        } catch (InterruptedException e) {
-//                                            Log.e(TAG, e.getMessage());
-//                                        }
-//
-//                                        try {
-//
-//                                            client = new Socket(deviceIP, Integer.parseInt(activatePort));
-//                                            client.close();
-//                                            client = null;
-//                                            isReady = true;
-//                                        } catch (Exception e) {
-//                                            Log.e(TAG, e.getMessage());
-//                                            try {
-//                                                Thread.sleep(3 * 1000L);
-//                                                timeoutValue = timeoutValue - 3;
-//                                            } catch (InterruptedException e1) {
-//
-//                                                Log.e(TAG, e1.getMessage());
-//
-//                                            }
-//                                        }
-//                                    }
-//
-//                                    if (isReady) {
-//                                        HttpPostData(deviceIP, activeToken);
-//                                        String stringResult = "{\"active_token\": \"" + activeToken + "\", \"mac\": \"" + deviceMac + "\"}";
-//                                        Log.i(TAG, stringResult);
-//                                        JSONObject activeJSON = null;
-//                                        try {
-//                                            activeJSON = new JSONObject(stringResult);
-//                                        } catch (JSONException e) {
-//                                            Log.e(TAG, e.getMessage());
-//                                        }
-//                                        easyLinkCallbackContext.success(activeJSON);
-//                                    } else {
-//                                        Log.e(TAG, "activate failed");
-//                                        easyLinkCallbackContext.error("JSON obj error");
-//                                    }
-//                                }
-//                            }).start();
-//
-//
-//                            //Call Step 6. - pls. DO NOT REMOVE
-//                            //Authorize(activeToken);
-//                            //easyLinkCallbackContext.success("{\"ip\": \"" + deviceIP + ", \"user_token\": \"" + activeToken + "\"}");
-//                        } catch (JSONException e) {
-//                            Log.e(TAG, e.getMessage());
-//                            easyLinkCallbackContext.error("parse JSON obj error");
-//                        }
-//                    } else {
-//                        Log.e(TAG, "socket data is empty!");
-//                        easyLinkCallbackContext.error("FTC socket data empty");
-//                    }
-//                }
-//
-//                @Override
-//                public void isSmallMTU(int MTU) {
-//                }
-//            });
-//        } else {
-//            easyLinkCallbackContext.error("args error");
-//        }
-//    }
-
-
-    /**
-     * Step 3,4,5. Send activate request to module,
-     * module sends the request to MXChip cloud and then get back device id and return to app.
-     *
-     * @param activateDeviceIP    device ip need to-be activated
-     * @param activateDeviceToken device token need to-be activated
-     */
-    private void HttpPostData(String activateDeviceIP, String activateDeviceToken) {
-        Log.i(TAG, " Step 3. Send activate request to MXChip model.");
-
-        try {
-            HttpClient httpclient = new DefaultHttpClient();
-            String ACTIVATE_PORT = activatePort;//"8000";
-            String ACTIVATE_URL = "/dev-activate";
-            String urlString = "http://" + activateDeviceIP + ":" + ACTIVATE_PORT
-                    + ACTIVATE_URL;
-            Log.i(TAG, "urlString:" + urlString);
-            HttpPost httppost = new HttpPost(urlString);
-            httppost.addHeader("Content-Type", "application/json");
-            httppost.addHeader("Cache-Control", "no-cache");
-            JSONObject obj = new JSONObject();
-            obj.put("login_id", deviceLoginID);
-            obj.put("dev_passwd", devicePassword);
-            obj.put("user_token", activateDeviceToken);
-            Log.i(TAG, "" + obj.toString());
-            httppost.setEntity(new StringEntity(obj.toString()));
-            HttpResponse response;
-            response = httpclient.execute(httppost);
-            int respCode = response.getStatusLine().getStatusCode();
-            Log.i(TAG, "respCode:" + respCode);
-            String responsesString = EntityUtils.toString(response.getEntity());
-            Log.i(TAG, "responsesString:" + responsesString);
-            if (respCode == HttpURLConnection.HTTP_OK) {
-                JSONObject jsonObject = new JSONObject(responsesString);
-                //Get device ID and save in class variable.
-                String deviceID = jsonObject.getString("device_id");
-                Log.i(TAG, "deviceID:" + deviceID);
-
-            } else {
-//                easyLinkCallbackContext.error("Device activate failed.");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.getMessage());
+        if (action.equals("startUDPServer")) {
+            int port = args.getInt(0);
+            startUDPServer(port);
+            return true;
         }
+        if (action.equals("sendUDPData")) {
+            int port = args.getInt(0);
+            String data = args.getString(1);
+            String ip = args.getString(2);
+            if (data.length() > 10) {
+                sendUDPData(ip, port, data);
+            } else {
+                broadcastData(port, data);
+            }
+            return true;
+        }
+        return false;
     }
 
 

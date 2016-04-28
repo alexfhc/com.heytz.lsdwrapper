@@ -22,10 +22,24 @@ exports.setDeviceWifi = function (wifiSSID,
         ]);
 };
 exports.sendVerification = function () {
-    exec( null,null,"lsdwrapper", "sendVerification",
+    exec(null, null, "lsdwrapper", "sendVerification",
         []);
 };
 exports.dealloc = function () {
-    exec( null,null,"lsdwrapper", "dealloc",
+    exec(null, null, "lsdwrapper", "dealloc",
         []);
+};
+exports.startUDPServer = function (port) {
+    exec(success, error, "lsdwrapper", "startUDPServer",
+        [
+            port
+        ]);
+};
+exports.sendUDPData = function (port, data, ip) {
+    exec(success, error, "lsdwrapper", "sendUDPData",
+        [
+            port,
+            data,
+            ip
+        ]);
 };
