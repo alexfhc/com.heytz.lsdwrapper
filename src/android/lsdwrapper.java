@@ -252,7 +252,7 @@ public class lsdwrapper extends CordovaPlugin {
                     // create socket
                     datagramSocket = new DatagramSocket(port);
                     datagramSocket.receive(dp);
-                    InetAddress clientIP = dp.getAddress().getHostAddress();
+                    String clientIP = dp.getAddress().getHostAddress();
                     String data = new String(dp.getData(), 0, dp.getLength());
                     data = data + "=ip:" + clientIP;
                     lsdCallbackContext.success(data);
@@ -281,7 +281,7 @@ public class lsdwrapper extends CordovaPlugin {
                         datagramSocket.send(datagramPacket);
                         Thread.sleep(3000);
                     }
-                    dgSocket.close();
+//                    dgSocket.close();
                     lsdCallbackContext.success("done");
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
@@ -306,7 +306,7 @@ public class lsdwrapper extends CordovaPlugin {
                     byte[] bytes = data.getBytes();
                     datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("ip"), port);
                     datagramSocket.send(datagramPacket);
-                    dgSocket.close();
+//                    dgSocket.close();
                     lsdCallbackContext.success("done");
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
