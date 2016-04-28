@@ -1,50 +1,37 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="com.heytz.mxsdkwrapper" version="0.3.1" xmlns="http://apache.org/cordova/ns/plugins/1.0"
+<plugin id="com.heytz.lsdwrapper" version="0.3.1" xmlns="http://apache.org/cordova/ns/plugins/1.0"
         xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <name>mxsdkwrapper</name>
-    <js-module name="mxsdkwrapper" src="www/mxsdkwrapper.js">
-        <clobbers target="cordova.plugins.mxsdkwrapper"/>
+    <name>lsdwrapper</name>
+    <js-module name="lsdwrapper" src="www/lsdwrapper.js">
+        <clobbers target="cordova.plugins.lsdwrapper"/>
     </js-module>
     <platform name="ios">
         <config-file parent="/*" target="config.xml">
-            <feature name="mxsdkwrapper">
-                <param name="ios-package" value="mxsdkwrapper"/>
+            <feature name="lsdwrapper">
+                <param name="ios-package" value="lsdwrapper"/>
             </feature>
         </config-file>
         <framework src="SystemConfiguration.framework"/>
         <framework src="CFNetwork.framework"/>
 
-        <source-file src="src/ios/NSString+MD5.h"/>
-        <source-file src="src/ios/NSString+MD5.m"/>
-        <source-file src="src/ios/mxsdkwrapper.m"/>
-
-        <!--CocoaAsyncSocket v7.3.3-->
-        <source-file src="src/ios/asyncsocket/AsyncSocket.h"/>
-        <source-file src="src/ios/asyncsocket/AsyncSocket.m"/>
-        <source-file src="src/ios/asyncsocket/AsyncUdpSocket.h"/>
-        <source-file src="src/ios/asyncsocket/AsyncUdpSocket.m"/>
-
-        <!--Reachability-->
-        <source-file src="src/ios/EasyLink/Reachability/Reachability.h"/>
-        <source-file src="src/ios/EasyLink/Reachability/Reachability.m"/>
-
-        <!--Easylink lib-->
-        <source-file src="src/ios/EasyLink/Common/EASYLINK.h"/>
-        <source-file src="src/ios/EasyLink/Common/route.h"/>
-        <source-file framework="true" src="src/ios/EasyLink/Common/libEasyLink.a"/>
+        <source-file src="src/ios/HiJoine.h"/>
+        <source-file src="src/ios/lsdwrapper.m"/>
+        <source-file framework="true" src="libHIQJOine.a"/>
+        <framework src="libHIQJOine.a"/>
 
     </platform>
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
-            <feature name="mxsdkwrapper">
-                <param name="android-package" value="com.heytz.mxsdkwrapper.mxsdkwrapper"/>
+            <feature name="lsdwrapper">
+                <param name="android-package" value="com.heytz.lsdwrapper.lsdwrapper"/>
             </feature>
         </config-file>
         <config-file parent="/*" target="AndroidManifest.xml"/>
-        <source-file src="src/android/mxsdkwrapper.java" target-dir="src/com/heytz/mxsdkwrapper"/>
+        <source-file src="src/android/lsdwrapper.java" target-dir="src/com/heytz/lsdwrapper"/>
         <source-file src="libs/dd-plist.jar" target-dir="libs"/>
-        <source-file src="libs/easylink_ftc_out.jar" target-dir="libs"/>
+        <source-file src="libs/lsd-easy-joine.jar" target-dir="libs"/>
         <source-file src="libs/jetty-8.1.15.jar" target-dir="libs"/>
+        <source-file src="libs/httpclient-4.5.1.jar" target-dir="libs"/>
     </platform>
 </plugin>

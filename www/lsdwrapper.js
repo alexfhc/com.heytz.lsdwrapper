@@ -9,7 +9,7 @@ exports.setDeviceWifi = function (wifiSSID,
                                   moduleDefaultUser,
                                   moduleDefaultPass,
                                   success, error) {
-    exec(success, error, "mxsdkwrapper", "setDeviceWifi",
+    exec(success, error, "lsdwrapper", "setDeviceWifi",
         [
             wifiSSID,
             wifiKey,
@@ -21,4 +21,11 @@ exports.setDeviceWifi = function (wifiSSID,
             moduleDefaultPass
         ]);
 };
-
+exports.sendVerification = function () {
+    exec( null,null,"lsdwrapper", "sendVerification",
+        []);
+};
+exports.dealloc = function () {
+    exec( null,null,"lsdwrapper", "dealloc",
+        []);
+};
