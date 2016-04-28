@@ -237,7 +237,7 @@ public class lsdwrapper extends CordovaPlugin {
         Log.i(TAG, "stopSend................" + sendFlag);
     }
 
-    private void startUDPServer(int port) {
+    private void startUDPServer(final int port) {
         // Run the UDP transmitter initialization on its own thread (just in case, see sendMessage comment)
         cordova.getThreadPool().execute(new Runnable() {
             public void run() {
@@ -252,7 +252,7 @@ public class lsdwrapper extends CordovaPlugin {
                     // create socket
                     datagramSocket = new DatagramSocket(port);
                     datagramSocket.receive(dp);
-                    String clientIP = dp.getAddress().getHostAddress();
+                    InetAddress clientIP = dp.getAddress().getHostAddress();
                     String data = new String(dp.getData(), 0, dp.getLength());
                     data = data + "=ip:" + clientIP;
                     lsdCallbackContext.success(data);
@@ -264,7 +264,7 @@ public class lsdwrapper extends CordovaPlugin {
         });
     }
 
-    private void broadcastData(int port, String data) {
+    private void broadcastData(final int port,final String data) {
         final String message = "{\"appId\":\"testid\"}";
         // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
         cordova.getThreadPool().execute(new Runnable() {
@@ -273,7 +273,7 @@ public class lsdwrapper extends CordovaPlugin {
             }
 
             private void sendMessage(int port, String data) {
-                DatagramSocket dgSocket = new DatagramSocket();
+                datagramSocket = new DatagramSocket();
                 try {
                     byte[] bytes = data.getBytes();
                     datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("255.255.255.255"), port);
@@ -292,7 +292,7 @@ public class lsdwrapper extends CordovaPlugin {
         });
     }
 
-    private void sendUDPData(String ip, int port, String data) {
+    private void sendUDPData(final String ip, final int port, final String data) {
         final String message = "{\"appId\":\"testid\"}";
         // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
         cordova.getThreadPool().execute(new Runnable() {
@@ -301,7 +301,7 @@ public class lsdwrapper extends CordovaPlugin {
             }
 
             private void sendMessage(String ip, int port, String data) {
-                DatagramSocket dgSocket = new DatagramSocket();
+                datagramSocket = new DatagramSocket();
                 try {
                     byte[] bytes = data.getBytes();
                     datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("ip"), port);
