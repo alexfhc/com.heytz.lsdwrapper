@@ -265,56 +265,56 @@ public class lsdwrapper extends CordovaPlugin {
     }
 
     private void broadcastData(final int port,final String data) {
-        final String message = "{\"appId\":\"testid\"}";
-        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
-        cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
-                this.sendMessage(port, message);
-            }
-
-            private void sendMessage(int port, String data) {
-                datagramSocket = new DatagramSocket();
-                try {
-                    byte[] bytes = data.getBytes();
-                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("255.255.255.255"), port);
-                    for (int i = 0; i < 5; i++) {
-                        datagramSocket.send(datagramPacket);
-                        Thread.sleep(3000);
-                    }
-//                    dgSocket.close();
-                    lsdCallbackContext.success("done");
-                } catch (Exception e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+//        final String message = "{\"appId\":\"testid\"}";
+//        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
+//        cordova.getThreadPool().execute(new Runnable() {
+//            public void run() {
+//                this.sendMessage(port, message);
+//            }
+//
+//            private void sendMessage(int port, String data) {
+//                datagramSocket = new DatagramSocket();
+//                try {
+//                    byte[] bytes = data.getBytes();
+//                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("255.255.255.255"), port);
+//                    for (int i = 0; i < 5; i++) {
+//                        datagramSocket.send(datagramPacket);
+//                        Thread.sleep(3000);
+//                    }
+////                    dgSocket.close();
+//                    lsdCallbackContext.success("done");
+//                } catch (Exception e) {
+//                    // TODO Auto-generated catch block
+//                    e.printStackTrace();
 //                }
-            }
-        });
+////                }
+//            }
+//        });
     }
 
     private void sendUDPData(final String ip, final int port, final String data) {
-        final String message = "{\"appId\":\"testid\"}";
-        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
-        cordova.getThreadPool().execute(new Runnable() {
-            public void run() {
-                this.sendMessage(ip, port, message);
-            }
-
-            private void sendMessage(String ip, int port, String data) {
-                datagramSocket = new DatagramSocket();
-                try {
-                    byte[] bytes = data.getBytes();
-                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("ip"), port);
-                    datagramSocket.send(datagramPacket);
-//                    dgSocket.close();
-                    lsdCallbackContext.success("done");
-                } catch (Exception e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+//        final String message = "{\"appId\":\"testid\"}";
+//        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
+//        cordova.getThreadPool().execute(new Runnable() {
+//            public void run() {
+//                this.sendMessage(ip, port, message);
+//            }
+//
+//            private void sendMessage(String ip, int port, String data) {
+//                datagramSocket = new DatagramSocket();
+//                try {
+//                    byte[] bytes = data.getBytes();
+//                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("ip"), port);
+//                    datagramSocket.send(datagramPacket);
+////                    dgSocket.close();
+//                    lsdCallbackContext.success("done");
+//                } catch (Exception e) {
+//                    // TODO Auto-generated catch block
+//                    e.printStackTrace();
 //                }
-            }
-        });
+////                }
+//            }
+//        });
     }
 
     private static byte[] getBytes(int capacity) {
