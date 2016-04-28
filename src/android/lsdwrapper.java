@@ -252,7 +252,7 @@ public class lsdwrapper extends CordovaPlugin {
                     // create socket
                     datagramSocket = new DatagramSocket(port);
                     datagramSocket.receive(dp);
-                    clientIP = dp.getAddress().getHostAddress();
+                    String clientIP = dp.getAddress().getHostAddress();
                     String data = new String(dp.getData(), 0, dp.getLength());
                     data = data + "=ip:" + clientIP;
                     lsdCallbackContext.success(data);
@@ -300,7 +300,7 @@ public class lsdwrapper extends CordovaPlugin {
                 this.sendMessage(ip, port, message);
             }
 
-            private void sendMessage(int port, String data) {
+            private void sendMessage(String ip, int port, String data) {
                 DatagramSocket dgSocket = new DatagramSocket();
                 try {
                     byte[] bytes = data.getBytes();
