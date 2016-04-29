@@ -29,13 +29,13 @@ exports.dealloc = function () {
     exec(null, null, "lsdwrapper", "dealloc",
         []);
 };
-exports.startUDPServer = function (port) {
+exports.startUDPServer = function (port, success, error) {
     exec(success, error, "lsdwrapper", "startUDPServer",
         [
             port
         ]);
 };
-exports.sendUDPData = function (port, data, ip) {
+exports.sendUDPData = function (port, data, ip, success, error) {
     exec(success, error, "lsdwrapper", "sendUDPData",
         [
             port,

@@ -1,11 +1,11 @@
 package com.heytz.lsdwrapper;
 
 import android.content.Context;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-//import android.net.wifi.WifiInfo;
-//import android.net.wifi.WifiManager;
 import com.lsd.easy.joine.lib.CRC8;
 import com.lsd.easy.joine.lib.ConfigUdpBroadcast;
 import com.lsd.easy.joine.lib.ConfigUdpBroadcast.ConfigRetObj;
@@ -13,18 +13,10 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.String;
 import java.net.*;
 import java.util.HashSet;
 import java.util.Random;
@@ -250,11 +242,12 @@ public class lsdwrapper extends CordovaPlugin {
                     byte[] buf = new byte[1024];
                     DatagramPacket dp = new DatagramPacket(buf, buf.length);
                     // create socket
-                    datagramSocket = new DatagramSocket(port);
-                    datagramSocket.receive(dp);
+                    DatagramSocket ds = new DatagramSocket(port);
+                    ds.receive(dp);
                     String clientIP = dp.getAddress().getHostAddress();
                     String data = new String(dp.getData(), 0, dp.getLength());
                     data = data + "=ip:" + clientIP;
+                    ds.close();
                     lsdCallbackContext.success(data);
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
@@ -264,57 +257,60 @@ public class lsdwrapper extends CordovaPlugin {
         });
     }
 
-    private void broadcastData(final int port,final String data) {
-//        final String message = "{\"appId\":\"testid\"}";
-//        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
-//        cordova.getThreadPool().execute(new Runnable() {
-//            public void run() {
-//                this.sendMessage(port, message);
-//            }
-//
-//            private void sendMessage(int port, String data) {
-//                datagramSocket = new DatagramSocket();
-//                try {
-//                    byte[] bytes = data.getBytes();
-//                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("255.255.255.255"), port);
-//                    for (int i = 0; i < 5; i++) {
-//                        datagramSocket.send(datagramPacket);
-//                        Thread.sleep(3000);
-//                    }
-////                    dgSocket.close();
-//                    lsdCallbackContext.success("done");
-//                } catch (Exception e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
+    private void broadcastData(final int port, final String data) {
+        final String message = "{\"appId\":\"testid\"}";
+        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                this.sendMessage(port, message);
+            }
+
+            private void sendMessage(int port, String data) {
+                try {
+                    datagramSocket = new DatagramSocket();
+                    byte[] bytes = data.getBytes();
+                    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                    int testIP = wifiInfo.getIpAddress();
+                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("255.255.255.255"), port);
+                    for (int i = 0; i < 5; i++) {
+                        datagramSocket.send(datagramPacket);
+                        Thread.sleep(3000);
+                    }
+                    datagramSocket.close();
+                    lsdCallbackContext.success("done");
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
 //                }
-////                }
-//            }
-//        });
+            }
+        });
     }
 
     private void sendUDPData(final String ip, final int port, final String data) {
-//        final String message = "{\"appId\":\"testid\"}";
-//        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
-//        cordova.getThreadPool().execute(new Runnable() {
-//            public void run() {
-//                this.sendMessage(ip, port, message);
-//            }
-//
-//            private void sendMessage(String ip, int port, String data) {
-//                datagramSocket = new DatagramSocket();
-//                try {
-//                    byte[] bytes = data.getBytes();
-//                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("ip"), port);
-//                    datagramSocket.send(datagramPacket);
-////                    dgSocket.close();
-//                    lsdCallbackContext.success("done");
-//                } catch (Exception e) {
-//                    // TODO Auto-generated catch block
-//                    e.printStackTrace();
+        final String message = "{\"appId\":\"testid\"}";
+        // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                this.sendMessage(ip, port, message);
+            }
+
+            private void sendMessage(String ip, int port, String data) {
+                try {
+                    datagramSocket = new DatagramSocket();
+                    byte[] bytes = data.getBytes();
+                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(ip), port);
+                    datagramSocket.send(datagramPacket);
+                    datagramSocket.close();
+                    lsdCallbackContext.success("done");
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
 //                }
-////                }
-//            }
-//        });
+            }
+        });
     }
 
     private static byte[] getBytes(int capacity) {
