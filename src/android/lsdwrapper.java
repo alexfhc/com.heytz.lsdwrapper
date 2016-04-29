@@ -1,8 +1,6 @@
 package com.heytz.lsdwrapper;
 
 import android.content.Context;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -13,8 +11,11 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
+import org.eclipse.jetty.server.ResourceCache;
 import org.json.JSONArray;
 import org.json.JSONException;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 
 import java.io.IOException;
 import java.net.*;
@@ -35,6 +36,9 @@ public class lsdwrapper extends CordovaPlugin {
     private String userName;
     private String deviceLoginID;
     private String devicePassword;
+    private String mac;
+    private boolean gotCallback;
+    private boolean didReturned;
     //  private String appSecretKey;
     //  private int easylinkVersion;
     private int activateTimeout;
@@ -52,6 +56,7 @@ public class lsdwrapper extends CordovaPlugin {
     private ConfigUdpBroadcast mConfigBroadUdp;
     private String broadcastIp = "255.255.255.255";
     private Set<String> successMacSet = new HashSet();
+    private ResourceCache.Content content;
 
 
     private Runnable timeoutRun = new Runnable() {
@@ -68,9 +73,12 @@ public class lsdwrapper extends CordovaPlugin {
         System.out.println(obj);
         stopSend();
         if (obj.errcode == 0) {
-//            startUDPServer();
-//            broadcastData();
-            lsdCallbackContext.success(obj.mac);
+            if (!gotCallback) {
+                mac = obj.mac;
+                startUDPServer(19530);
+                gotCallback = true;
+            }
+//            lsdCallbackContext.success(obj.mac);
 
 //            new Thread(new Runnable() {
 //                @Override
@@ -231,7 +239,8 @@ public class lsdwrapper extends CordovaPlugin {
 
     private void startUDPServer(final int port) {
         // Run the UDP transmitter initialization on its own thread (just in case, see sendMessage comment)
-        cordova.getThreadPool().execute(new Runnable() {
+
+        new Thread(new Runnable() {
             public void run() {
                 this.initialize(port);
             }
@@ -240,58 +249,64 @@ public class lsdwrapper extends CordovaPlugin {
                 // create packet
                 try {
                     byte[] buf = new byte[1024];
-                    DatagramPacket dp = new DatagramPacket(buf, buf.length);
+                    datagramPacket = new DatagramPacket(buf, buf.length);
                     // create socket
-                    DatagramSocket ds = new DatagramSocket(port);
-                    ds.receive(dp);
-                    String clientIP = dp.getAddress().getHostAddress();
-                    String data = new String(dp.getData(), 0, dp.getLength());
-                    data = data + "=ip:" + clientIP;
-                    ds.close();
-                    lsdCallbackContext.success(data);
+                    datagramSocket = new DatagramSocket(port);
+                    String validate = "{\"app_id\":\"123123c45213cg2454354hg\",\"product_key\":\"0665bc7a5a62cc538070373cc507446b\"," +
+                            "\"user_token\":\"69c09f9d-3920-4d4a-ab7e-1f4e2827c2f2\",\"uid\":\"69c09f9d-3920-4d4a-ab7e-1f4e2827c2f2\"}";
+                    broadcastData(19531, validate);
+
+                    datagramSocket.receive(datagramPacket);
+//                    String clientIP = datagramPacket.getAddress().getHostAddress();
+                    String data = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
+//                    data = data + "=ip:" + clientIP;
+                    String did = data.substring(data.indexOf("device_id\":") + 11, data.indexOf("device_id\":") + 30);
+                    String returnData = "{\"did\":" + did + "}";
+                    didReturned = true;
+                    broadcastData(19531, returnData);
+
+                    datagramSocket.close();
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
-        });
+        }).start();
     }
 
     private void broadcastData(final int port, final String data) {
-        final String message = "{\"appId\":\"testid\"}";
+//        final String message = "{\"app_id\":\"testid\"}";
         // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
-        cordova.getThreadPool().execute(new Runnable() {
+        new Thread(new Runnable() {
             public void run() {
-                this.sendMessage(port, message);
+                this.sendMessage(port, data);
             }
 
             private void sendMessage(int port, String data) {
                 try {
-                    datagramSocket = new DatagramSocket();
+                    DatagramSocket ds = new DatagramSocket();
                     byte[] bytes = data.getBytes();
-                    WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-                    WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                    int testIP = wifiInfo.getIpAddress();
-                    datagramPacket = new DatagramPacket(bytes, bytes.length, InetAddress.getByName("255.255.255.255"), port);
+                    DatagramPacket dp = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(getMobileIP()), port);
                     for (int i = 0; i < 5; i++) {
-                        datagramSocket.send(datagramPacket);
-                        Thread.sleep(3000);
+                        ds.send(dp);
+                        Thread.sleep(1000);
                     }
-                    datagramSocket.close();
-                    lsdCallbackContext.success("done");
+                    lsdCallbackContext.success(mac);
+                    ds.close();
+//                    lsdCallbackContext.success("done");
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
 //                }
             }
-        });
+        }).start();
     }
 
     private void sendUDPData(final String ip, final int port, final String data) {
         final String message = "{\"appId\":\"testid\"}";
         // Run the UDP transmission on its own thread (it fails on some Android environments if run on the same thread)
-        cordova.getThreadPool().execute(new Runnable() {
+        new Thread(new Runnable() {
             public void run() {
                 this.sendMessage(ip, port, message);
             }
@@ -310,7 +325,7 @@ public class lsdwrapper extends CordovaPlugin {
                 }
 //                }
             }
-        });
+        }).start();
     }
 
     private static byte[] getBytes(int capacity) {
@@ -387,6 +402,8 @@ public class lsdwrapper extends CordovaPlugin {
                 return false;
             }
             mHandler.postDelayed(timeoutRun, 40000L);
+            gotCallback = false;
+            didReturned = false;
             send(wifiSSID, wifiKey);
             // todo: replace with EasylinkAPI
             //ftcService = new FTC_Service();
@@ -403,11 +420,15 @@ public class lsdwrapper extends CordovaPlugin {
         }
         if (action.equals("dealloc")) {
             stopSend();
+            if (datagramSocket != null) {
+                datagramSocket.close();
+            }
             return true;
         }
         if (action.equals("startUDPServer")) {
             int port = args.getInt(0);
             startUDPServer(port);
+            lsdCallbackContext = callbackContext;
             return true;
         }
         if (action.equals("sendUDPData")) {
@@ -419,6 +440,7 @@ public class lsdwrapper extends CordovaPlugin {
             } else {
                 broadcastData(port, data);
             }
+            lsdCallbackContext = callbackContext;
             return true;
         }
         return false;
@@ -428,17 +450,20 @@ public class lsdwrapper extends CordovaPlugin {
     /**
      * @return 0 if we don't get the mobile device ip, else the mobile device ip
      */
-//    private int getMobileIP() {
-//        try {
-//            WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-//            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-//            return wifiInfo.getIpAddress();
+    private String getMobileIP() {
+        try {
+            WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+            WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+            int IP = wifiInfo.getIpAddress();
+            String localIP = ((IP & 0xff) + "." + (IP >> 8 & 0xff) + "."
+                    + (IP >> 16 & 0xff) + ".255");
+            return localIP;
 //
-//        } catch (Exception e) {
-//            Log.e(TAG, e.getMessage());
-//            return 0;
-//        }
-//    }
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+            return "";
+        }
+    }
 
     /**
      * MD5 algorithm for plain text
