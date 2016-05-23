@@ -388,6 +388,7 @@ public class lsdwrapper extends CordovaPlugin {
         }
         if (action.equals("dealloc")) {
             stopSend();
+            mHandler.removeCallbacks(timeoutRun);
             return true;
         }
         return false;
