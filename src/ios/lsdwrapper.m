@@ -54,7 +54,7 @@
         acitvateTimeout = [[command.arguments objectAtIndex:4] intValue];
     }
 
-    if (wifiSSID == nil || wifiSSID.length == 0 || wifiKey == nil || wifiKey.length == 0 || loginID == nil || loginID.length == 0 || activatePort==nil || activatePort.length == 0 || deviceLoginId == nil || deviceLoginId.length == 0
+    if (wifiSSID == nil || wifiSSID.length == 0 || loginID == nil || loginID.length == 0 || activatePort==nil || activatePort.length == 0 || deviceLoginId == nil || deviceLoginId.length == 0
         || devicePass == nil || devicePass.length==0) {
         NSLog(@"Error: arguments");
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
