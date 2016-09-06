@@ -21,12 +21,13 @@
     </platform>
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
-            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
             <feature name="lsdwrapper">
                 <param name="android-package" value="com.heytz.lsdwrapper.lsdwrapper"/>
             </feature>
         </config-file>
-        <config-file parent="/*" target="AndroidManifest.xml"/>
+        <config-file parent="/manifest" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+        </config-file>
         <source-file src="src/android/lsdwrapper.java" target-dir="src/com/heytz/lsdwrapper"/>
         <source-file src="libs/dd-plist.jar" target-dir="libs"/>
         <source-file src="libs/lsd-easy-joine.jar" target-dir="libs"/>
